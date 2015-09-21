@@ -1,0 +1,51 @@
+# Steps followed:
+# 1. Atropos segmentation of 10 patients' T1 images. Background removal mask is used only during this atropos segmentation step.
+# 2. Label files (total 6 classes) is merged with the Truth file which gives a 7 class label file
+# 3. Apply 10 label files on all four sequences of the corresponding 10 patients
+# 4. Find T1_CSFmean, T2_CSFmean, T1C_CSFmean and FLAIR_CSFmean and use that for CSF mean normalization
+
+import os
+import time
+
+ANTSPATH = '/home/bmi/antsbin/bin/' # verified path
+#input_path = '/home/bmi/mega_test_folder' # verified path
+output_path = '/home/bmi/SSE/training/training01/regis1' # verified path
+#priors_path = '/home/bmi/Kirby/Priors' # verified path
+ORIGSPATH = '/home/bmi/SSE/training/training01/orig1' # verified path
+PREPATH = '/home/bmi/SSE/training/training01/preprocessed'
+start=time.clock()
+#Read patient list 
+ORIGSPATH, patients, files = os.walk(ORIGSPATH).next()
+PREPATH, patients, files = os.walk(PREPATH).next()
+
+#Make Masks
+#10 patients
+#for p in sorted(patients)[1:11]:
+for p in patients:
+    print 'patients',p
+    #Read all sequences
+    sequences_orig = os.listdir(ORIGSPATH+'/'+p)
+    sequences_prep = os.listdir(PREPATH+'/'+p)
+    #print sequences_orig
+    #print sequences_prep
+
+   
+    for t in sequences_orig:
+       
+        sequences_orig = ORIGSPATH+'/'+p+'/'+t
+        sequences_prep = PREPATH+'/'+p+'/'+t[0:-4]+'_pp.nii'
+        print sequences_orig
+        print sequences_prep
+                
+
+        reg_file = output_path+'/'+p+'/'+ t
+        if not os.path.exists(reg_file):
+            os.makedirs(reg_file)
+        os.system('bash '+ANTSPATH+'antsRegistrationSyN.sh -d 3 -f '+sequences_orig+' -m '+ sequences_prep +' -o '+reg_file+' -t a -n 20') # verified kirby file path
+
+               
+        print "antsRegistrationSyN of  " + t + ".....finished"  
+       
+end=time.clock()
+
+print 'done in------>',int(end-start)/60
